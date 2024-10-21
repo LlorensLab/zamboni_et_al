@@ -18,6 +18,8 @@ library(DoubletFinder)
 library(scDblFinder)
 
 library(TCseq)
+library(gprofiler2)
+library(UpSetR)
 
 library(Matrix)
 library(patchwork)

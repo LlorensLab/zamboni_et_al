@@ -103,6 +103,20 @@ for(i in clusters){
     dplyr::filter(p_val < 0.05 & abs(avg_log2FC) > 0.5)
 }
 
+# upset plot
+######
+list_markers <- list()
+for(i in names(markers_Uvsothers_rna_all)){
+  markers <- markers_Uvsothers_rna_all[[i]] %>%
+    filter(abs(avg_log2FC) > 0.5 & p_val_adj < 0.05) %>%
+    select(gene) 
+  markers <- markers$gene %>% unique() %>% as.character()
+  
+  list_markers[[i]] <- markers
+  
+}
+upset(fromList(list_markers), order.by = "freq")
+
 #save
 saveRDS(markers_Uvsothers_rna_all, "markers_Uvsothers_rna_all.rds")
 saveRDS(markers_Uvsothers_peaks_all, "markers_Uvsothers_peaks_all.rds")
