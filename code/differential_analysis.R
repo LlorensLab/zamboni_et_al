@@ -43,6 +43,21 @@ for(i in clusters){
     dplyr::filter(p_val_adj < 0.05)
 }
 
+#tss vs distal peaks
+DefaultAssay(multiome) <- "peaks"
+
+tss.positions <- GetTSSPositions(ranges = annotations)
+tss.positions <- Extend(
+  x = tss.positions,
+  upstream = 1000,
+  downstream = 100,
+  from.midpoint = TRUE
+) # obtain region around TSS
+
+closest_tss <- ClosestFeature(multiome, rownames(multiome), annotation = tss.positions)
+tss_peaks <- closest_tss %>% filter(distance == 0) # peaks falling within promoter region (between -1000 and +100 from TSS)
+distal_peaks <- closest_tss %>% filter(distance > 0) # peaks falling outside promoter region - assigned as distal
+
 #save 
 saveRDS(markers_rna, "markers_rna_multiome_celltypes.rds")
 saveRDS(markers_peaks, "markers_peaks_multiome_celltypes.rds")
