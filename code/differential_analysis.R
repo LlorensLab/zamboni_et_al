@@ -1,3 +1,9 @@
+##code for:
+#differential analysis at the cell type level
+#identifying peaks at the TSS vs distal peaks
+#linking peaks (performed for each cell type)
+#differential analysis in injury
+
 #differential analysis
 source("../source.R")
 multiome <- readRDS("merged_multiome.rds")
@@ -62,6 +68,17 @@ distal_peaks <- closest_tss %>% filter(distance > 0) # peaks falling outside pro
 saveRDS(markers_rna, "markers_rna_multiome_celltypes.rds")
 saveRDS(markers_peaks, "markers_peaks_multiome_celltypes.rds")
 
+# link peaks
+multiome <- RegionStats(multiome, BSgenome.Acahirinus.ENSEMBL.1.softmasked)
+for(i in levels(multiome)){
+  celltype <- subset(multiome, idents = i)
+  celltype <- LinkPeaks(celltype, 
+                        peak.assay = "peaks", 
+                        expression.assay = "RNA", 
+                        distance = 500000)
+  links_condition[[i]] <- celltype@assays[["peaks"]]@links
+  saveRDS(links_condition[[i]], paste0(i, "_linkpeaks.rds"))
+}
 
 # differential analysis injury
 multiome$condition <- factor(multiome$condition,
