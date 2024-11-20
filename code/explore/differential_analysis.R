@@ -69,6 +69,7 @@ saveRDS(markers_rna, "markers_rna_multiome_celltypes.rds")
 saveRDS(markers_peaks, "markers_peaks_multiome_celltypes.rds")
 
 # link peaks
+linkedpeaks <- list()
 multiome <- RegionStats(multiome, BSgenome.Acahirinus.ENSEMBL.1.softmasked)
 for(i in levels(multiome)){
   celltype <- subset(multiome, idents = i)
@@ -76,9 +77,10 @@ for(i in levels(multiome)){
                         peak.assay = "peaks", 
                         expression.assay = "RNA", 
                         distance = 500000)
-  links_condition[[i]] <- celltype@assays[["peaks"]]@links
-  saveRDS(links_condition[[i]], paste0(i, "_linkpeaks.rds"))
+  linkedpeaks[[i]] <- celltype@assays[["peaks"]]@links
+  saveRDS(linkedpeaks[[i]], paste0(i, "_linkpeaks.rds"))
 }
+
 
 # differential analysis injury
 multiome$condition <- factor(multiome$condition,
@@ -135,10 +137,10 @@ for(i in clusters){
     dplyr::filter(p_val < 0.05 & abs(avg_log2FC) > 0.5)
 }
 
-# upset plot
+# upset plot to extract injury-enriched genes shared among glia cells
 ######
 list_markers <- list()
-for(i in names(markers_Uvsothers_rna_all)){
+for(i in c("Astrocytes", "Ependymal", "Microglia", "Oligodendrocytes", "OPCs")){
   markers <- markers_Uvsothers_rna_all[[i]] %>%
     filter(abs(avg_log2FC) > 0.5 & p_val_adj < 0.05) %>%
     select(gene) 
@@ -148,6 +150,41 @@ for(i in names(markers_Uvsothers_rna_all)){
   
 }
 upset(fromList(list_markers), order.by = "freq")
+
+# List of intersections and their entries
+df_int <- lapply(df1$gene,function(x){
+  # pull the name of the intersections
+  intersection <- df1 %>% 
+    dplyr::filter(gene==x) %>% 
+    arrange(path) %>% 
+    pull("path") %>% 
+    paste0(collapse = "|")
+  # build the dataframe
+  data.frame(gene = x,int = intersection)
+}) %>% 
+  bind_rows()
+
+pan_glia_injury <- df_int[df_int$int %in% "Astrocytes|Ependymal|Microglia|OPCs|Oligodendrocytes",]
+
+#compute average expression for glia cells
+glia_clusters <- c("Astrocytes", "Ependymal", "OPCs", "Oligodendrocytes", "Microglia")
+glia <- subset(multiome, idents = glia_clusters)
+avg_rna_clusters <- AverageExpression(glia, assays = "RNA", group.by = "cluster_ids", return.seurat = T)
+
+DoHeatmap(avg_rna_clusters, pan_glia_injury$gene, draw.lines = F) +
+  scale_fill_viridis(option = "inferno") +
+  NoLegend()
+
+#get peaks linked to genes shared among glia cells
+linkedpeaks_df <- do.call("rbind", linkedpeaks)
+linked_panglia <- linkedpeaks_df %>%
+  dplyr::filter(gene %in% pan_glia_injury$gene)
+
+#plot average accessibility
+avg_peak_clusters <- AverageExpression(glia, assays = "peaks", group.by = "cluster_ids", return.seurat = T)
+DoHeatmap(avg_peaks_clusters, linked_panglia$peak, draw.lines = F) + 
+  scale_fill_viridis(option = "mako") +
+  NoLegend()
 
 #save
 saveRDS(markers_Uvsothers_rna_all, "markers_Uvsothers_rna_all.rds")
