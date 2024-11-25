@@ -53,7 +53,78 @@ astros <- astros %>%
   FindNeighbors(dims = 1:8) %>%
   FindClusters(resolution = 0.1)
 
-FeaturePlot(astros, "aavs_IREN5", max.cutoff = "q99", order = T)
+irens <- paste0("aavs_IREN", c(5, 8, 11, 12, 24))
+FeaturePlot(astros, irens, max.cutoff = "q99", order = T)
+
+# count detected BCs per cell
+Idents(astros) <- "orig.ident"
+injury <- subset(astros, idents = "Injured")
+meta_aavs <- injury@assays$aavs@counts[c(irens, "A1", "A5"),] %>% t() %>% as.data.frame()
+meta_aavs_bin <- meta_aavs %>%
+  mutate(across(everything(), ~ ifelse(. != 0, 1, 0)))
+colnames(meta_aavs_bin) <- c(irens, "A1", "A5")
+meta_aavs_bin <- meta_aavs_bin %>%
+  mutate(RowSum = rowSums(across(everything()))) %>%
+  mutate(RowSum_M = rowSums(across(1:5)))
+
+table_df <- table(meta_aavs_bin$RowSum) %>% as.data.frame()
+ggplot(table_df, aes(x=Var1, y=Freq)) + 
+  geom_bar(stat = "identity")
+
+
+# plot model interpretation (observed vs predicted accessibility)
+# load profiles observed and predicted by each model (astrocytes, reactive astrocytes and microglia)
+observed_m5 <- list(
+  Astrocytes = "chrombpnet_interpret/models/Astrocytes_fl0/auxiliary/data_unstranded.bw",
+  Reactive_astrocytes = "chrombpnet_interpret/models/Injury_Astrocytes_fl0/auxiliary/data_unstranded.bw",
+  Microglia = "chrombpnet_interpret/models/Microglia_fl0/auxiliary/data_unstranded.bw")
+
+predicted_m5 <- list(
+  Astrocytes = "enhancer_virus_astrocytes_bigwig_chrombpnet.bw",
+  Reactive_astrocytes = "enhancer_virus_bigwig_astrocytes_injury_chrombpnet.bw",
+  Microglia = "enhancer_virus_microglia_bigwig_chrombpnet.bw")
+
+coordinates <- read.table("enhancer_aav/Enhancer_coordinates_BCs.csv", sep = ";")
+enhancers = list(coordinates$V1)
+names(enhancers) <- irens
+
+p_obs <- list()
+p_pred <- list()
+for(i in names(enhancers)){
+  p_obs[[i]] <- BigwigTrack(
+    enhancers[[i]], observed_m5,
+    extend.upstream = 1000, extend.downstream = 1000,
+    type = "coverage", y_label = i, bigwig.scale = "common") + 
+    scale_fill_manual(values = c(palette[3], palette[4], palette[7]))
+  
+  p_pred[[i]] <- BigwigTrack(
+    enhancers[[i]], predicted_m5,
+    extend.upstream = 1000, extend.downstream = 1000,
+    type = "line", y_label = i, bigwig.scale = "common") + 
+    scale_color_manual(values = rep("black", 10))
+  
+}
+
+# plot observed and predicted profiles
+ggpubr::ggarrange(plotlist = p_obs, common.legend = T, ncol = 5)
+ggpubr::ggarrange(plotlist = p_pred, common.legend = T, ncol = 5)
+
+
+
+## interpret enhancer viruses
+coordinates <- read.table("enhancer_aav/Enhancer_coordinates_BCs.csv", sep = ";")
+chr <- sapply(strsplit(coordinates$V3, "-"), "[", 1) 
+start <- sapply(strsplit(coordinates$V3, "-"), "[", 2) 
+end <- sapply(strsplit(coordinates$V3, "-"), "[", 3) 
+summit <- round(coordinates$V4/2, 0)
+bed <- cbind(chr, start, end, 
+             rep("-", 23), rep("-", 23), rep("-", 23),
+             rep("-", 23), rep("-", 23), rep("-", 23),
+             summit)
+bed_file <- paste0("chrombpnet_interpret/enhancer_virus.bed")
+write.table(bed, bed_file,row.names = F,col.names = F, sep="\t", quote=FALSE)
+
+
 
 saveRDS(astros, "enhancer_aav/astros_aav_obj_240625.rds")
 
