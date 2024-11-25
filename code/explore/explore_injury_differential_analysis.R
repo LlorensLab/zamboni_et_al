@@ -1,3 +1,9 @@
+# code for exploring differential analysis in injury:
+# clustering of genes and peaks based on activation dynamics
+# shared glial gene expression program
+# AP1 transcription factor expression dynamics
+
+
 #clustering of DEGs and DARs
 # injury-induced genes and peaks are clustered using TCseq into modules with the same dynamics
 
@@ -175,3 +181,53 @@ for(j in names(modules_peaks)){
   }
   enriched_motifs[[j]] <- do.call("rbind", enriched_celltype)
 }
+
+
+## explore dynamic expression of AP1 transcription factors
+genes <- "Fos|Jun|Atf|Jdp|Batf|Maf"
+all_ap1 <- rownames(multiome@assays$RNA)[grep(genes, rownames(multiome@assays$RNA))]
+
+DefaultAssay(multiome) <- "RNA"
+pdf("all_AP1_genes.pdf", width = 10, height = 10)
+for(i in all_ap1){
+  p1 <- FeaturePlot(multiome, i, order = T, split.by = "injury")
+  p2 <- VlnPlot(multiome, i, group.by = "cluster_ids_timepoint") + NoLegend()
+  print(p1 / p2)
+}
+dev.off()
+
+timepoints <- c("U", "1dpi", "3dpi", "7dpi", "28dpi")
+glia_clusters <- c("Astrocytes", "Ependymal", "OPCs", "Oligodendrocytes", "Microglia")
+combinations <- expand.grid(glia_clusters, timepoints)
+
+glia <- subset(multiome, idents = glia_clusters)
+Idents(glia) <- "cluster_ids_timepoint"
+levels(glia) <- paste0(combinations$Var1, "_", combinations$Var2)
+
+avg_rna <- AverageExpression(glia, return.seurat = T, assays = "RNA")
+df_ap1 <- avg_rna@assays$RNA$data[all_ap1,] %>% t() %>% as.data.frame()
+df_ap1$celltype <- sapply(strsplit(rownames(df_ap1), "-"), "[[", 1)
+df_ap1$timepoint <- sapply(strsplit(rownames(df_ap1), "-"), "[[", 2) %>%
+  factor(levels = c("U", "1dpi", "3dpi", "7dpi", "28dpi"))
+
+# only use AP1 TFs that change GEX upon injury
+ap1_injury <- c("Fosl2", "Fosb", "Fos", "Fosl1", 
+                "Jun", "Junb", 
+                "Atf3", "Atf5", "Atf4", "Atf1", "Atf6b", 
+                "Jdp2", 
+                "Batf", 
+                "Mafk", "Mafg", "Maff")
+glia <- AddModuleScore(glia, features = list(ap1_injury), name = "ap1_injury")
+DotPlot(glia, features = "ap1_injury1", cols = c("lightgrey", "black"))
+
+ap1_plots <- list()
+for(i in ap1_injury){
+  ap1_plots[[i]] <- ggplot(df_ap1, aes_string(x="timepoint", y=i, group="celltype")) +
+    geom_line(aes(color=celltype))+
+    geom_point(aes(color=celltype))+
+    scale_color_manual(values=c(palette[3], palette[4], palette[7], palette[6], palette[5]))+
+    theme_classic()
+  
+}
+ggarrange(plotlist = ap1_plots, common.legend = T, nrow = 4, ncol = 4)
+
