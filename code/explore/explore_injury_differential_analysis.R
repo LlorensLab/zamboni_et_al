@@ -182,6 +182,68 @@ for(j in names(modules_peaks)){
   enriched_motifs[[j]] <- do.call("rbind", enriched_celltype)
 }
 
+## shared glial injury programs
+# upset plot to extract injury-enriched genes shared among glia cells
+######
+list_markers <- list()
+for(i in c("Astrocytes", "Ependymal", "Microglia", "Oligodendrocytes", "OPCs")){
+  markers <- markers_Uvsothers_rna_all[[i]] %>%
+    filter(abs(avg_log2FC) > 0.5 & p_val_adj < 0.05) %>%
+    select(gene) 
+  markers <- markers$gene %>% unique() %>% as.character()
+  
+  list_markers[[i]] <- markers
+  
+}
+upset(fromList(list_markers), order.by = "freq")
+
+# List of intersections 
+df_int <- lapply(df1$gene,function(x){
+  intersection <- df1 %>% 
+    dplyr::filter(gene==x) %>% 
+    arrange(path) %>% 
+    pull("path") %>% 
+    paste0(collapse = "|")
+  data.frame(gene = x,int = intersection)
+}) %>% 
+  bind_rows()
+
+pan_glia_injury <- df_int[df_int$int %in% "Astrocytes|Ependymal|Microglia|OPCs|Oligodendrocytes",]
+
+#compute average expression for glia cells
+glia_clusters <- c("Astrocytes", "Ependymal", "OPCs", "Oligodendrocytes", "Microglia")
+glia <- subset(multiome, idents = glia_clusters)
+avg_rna_clusters <- AverageExpression(glia, assays = "RNA", group.by = "cluster_ids", return.seurat = T)
+
+DoHeatmap(avg_rna_clusters, pan_glia_injury$gene, draw.lines = F) +
+  scale_fill_viridis(option = "inferno") +
+  NoLegend()
+
+#get peaks linked to genes shared among glia cells
+linkedpeaks_df <- do.call("rbind", linkedpeaks)
+linked_panglia <- linkedpeaks_df %>%
+  dplyr::filter(gene %in% pan_glia_injury$gene)
+
+#plot average accessibility
+avg_peak_clusters <- AverageExpression(glia, assays = "peaks", group.by = "cluster_ids", return.seurat = T)
+DoHeatmap(avg_peaks_clusters, linked_panglia$peak, draw.lines = F) + 
+  scale_fill_viridis(option = "mako") +
+  NoLegend()
+
+# pairwise comparison
+pairwise_glia_injury <- df_int[df_int$int %in% c("Astrocytes|Ependymal",
+                                                 "Astrocytes|Microglia",
+                                                 "Astrocytes|OPCs",
+                                                 "Ependymal|Microglia",
+                                                 "Ependymal|OPCs"),]
+
+DoHeatmap(avg_rna_clusters, pairwise_glia_injury$gene, draw.lines = F) +
+  scale_fill_viridis(option = "inferno") +
+  NoLegend()
+
+# explore functional terms on DAVID
+
+
 
 ## explore dynamic expression of AP1 transcription factors
 genes <- "Fos|Jun|Atf|Jdp|Batf|Maf"
@@ -196,12 +258,9 @@ for(i in all_ap1){
 }
 dev.off()
 
-timepoints <- c("U", "1dpi", "3dpi", "7dpi", "28dpi")
-glia_clusters <- c("Astrocytes", "Ependymal", "OPCs", "Oligodendrocytes", "Microglia")
-combinations <- expand.grid(glia_clusters, timepoints)
-
-glia <- subset(multiome, idents = glia_clusters)
 Idents(glia) <- "cluster_ids_timepoint"
+timepoints <- c("U", "1dpi", "3dpi", "7dpi", "28dpi")
+combinations <- expand.grid(glia_clusters, timepoints)
 levels(glia) <- paste0(combinations$Var1, "_", combinations$Var2)
 
 avg_rna <- AverageExpression(glia, return.seurat = T, assays = "RNA")
