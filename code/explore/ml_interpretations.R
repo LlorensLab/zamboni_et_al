@@ -289,10 +289,10 @@ for(i in names(celltype_dars)){
 }
 
 expressed_df <- do.call("rbind", expressed)
-
 expressed_df$expressed %>% table()
-
 
 expressed_df_chromvar <- expressed_df[expressed_df$expressed == "YES",]
 expressed_df_modisco <- modisco_report_adj[modisco_report_adj$tf_expressed == "YES",]
 intersect(unique(expressed_df_chromvar$gene), unique(expressed_df_modisco$tfs)) %>% length()
+
+
