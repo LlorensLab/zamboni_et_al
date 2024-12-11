@@ -70,7 +70,7 @@ saveRDS(markers_peaks, "markers_peaks_multiome_celltypes.rds")
 
 # link peaks
 linkedpeaks <- list()
-multiome <- RegionStats(multiome, BSgenome.Acahirinus.ENSEMBL.1.softmasked)
+multiome <- RegionStats(multiome, BSgenome.Mmusculus.UCSC.mm10)
 for(i in levels(multiome)){
   celltype <- subset(multiome, idents = i)
   celltype <- LinkPeaks(celltype, 
