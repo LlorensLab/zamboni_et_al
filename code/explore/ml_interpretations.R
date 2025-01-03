@@ -24,6 +24,7 @@ extract_metrics_to_df <- function(json_file_path) {
 }
 
 # qc metrics for each validation fold
+# Figure 2c
 metrics <- list()
 path_to_cross_valid <- "chrombpnet_interpret/models/cross_validation/"
 for(i in names(celltype_dars)){
@@ -55,6 +56,7 @@ ggplot(summary_performance, aes(x=celltype, y=mean_correlation)) +
 
 
 # plot observed and predicted accessibility across cell type models
+# Figure 2b
 dir_interpret = "chrombpnet_interpret/"
 pred_file = "_clusterpeaks_contrib.counts_scores.bw"
 clusters <- levels(multiome) # celltypes
@@ -168,6 +170,7 @@ rownames(motifs_freq_wide) <- celltype
 fun_color_range <- colorRampPalette(c("#2D558E", "grey99","#8A267C"))  # Create color generating function
 hm_colors <- fun_color_range(100) 
 
+# Figure 2d
 pheatmap::pheatmap(t(motifs_freq_wide), cluster_rows=T, cluster_cols=T,
                    scale="row", clustering_method="ward.D2",
                    fontsize=6, color = hm_colors, 
@@ -176,6 +179,7 @@ pheatmap::pheatmap(t(motifs_freq_wide), cluster_rows=T, cluster_cols=T,
 # plot tf expression
 tfs <- unique(unlist(strsplit(modisco_report_adj$motifs, "/")))
 
+# Figure S5e
 avg_rna_celltypes <- AverageExpression(multiome, assays = "RNA", return.seurat = T, group.by = "cluster_ids")
 agg_rna <- avg_rna_celltypes@assays$RNA@data[tfs,] %>% as.matrix()
 pheatmap::pheatmap(agg_rna, 
@@ -205,6 +209,7 @@ peaks$percent_with <- (peaks$peak_n - peaks$zero_pattern)/peaks$peak_n *100
 
 peaks$celltype <- factor(peaks$celltype, levels = names(celltype_dars))
 
+# Figure S5a
 p1 <- ggplot(peaks, aes(x=celltype, y=peak_n)) + 
   geom_bar(stat = "identity") +
   ylim(0,165000) +
@@ -215,7 +220,7 @@ p2 <- ggplot(peaks, aes(x=celltype, y=zero_pattern)) +
   theme_minimal() 
 p1 / p2
 
-# plot motifs per region
+# plot motifs per region - Figure S5b
 freq_df <- do.call("rbind", motifs_per_region)
 table_df <- table(freq_df$celltype, freq_df$Count) %>% as.data.frame()
 table_df$patterns <- ifelse(table_df$Var2 %in% c(4, 5, 6, 7, 8, 9), "4+", table_df$Var2)
@@ -236,7 +241,7 @@ ggplot(n_motifs_df, aes(x=reorder(clusters, names(celltype_dars)), y=n_motifs)) 
   theme_minimal() 
 
 
-## chromvar comparison
+## chromvar comparison - Figure S5d
 # add motif information
 multiome <- AddMotifs(
   object = multiome,
