@@ -37,7 +37,7 @@ obj <- obj %>%
   FindNeighbors(dims = 1:15) %>%
   FindClusters(resolution = 0.5)
 
-FeaturePlot(obj, c("tdTomato-WPRE", "Aldh1l1"), max.cutoff = "q99", order = T)
+FeaturePlot(obj, c("tdTomato-WPRE", "Aldh1l1"), max.cutoff = "q99", order = T) # Figure S9g
 
 # only retain astrocytes
 astros <- subset(obj, idents = c("0", "1", "2", "3", "4", "7"))
@@ -54,7 +54,7 @@ astros <- astros %>%
   FindClusters(resolution = 0.1)
 
 irens <- paste0("aavs_IREN", c(5, 8, 11, 12, 24))
-FeaturePlot(astros, irens, max.cutoff = "q99", order = T)
+FeaturePlot(astros, irens, max.cutoff = "q99", order = T) #Figure 6f
 
 # count detected BCs per cell
 Idents(astros) <- "orig.ident"
@@ -69,7 +69,7 @@ meta_aavs_bin <- meta_aavs_bin %>%
 
 table_df <- table(meta_aavs_bin$RowSum) %>% as.data.frame()
 ggplot(table_df, aes(x=Var1, y=Freq)) + 
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity") #Figure S9i
 
 
 # plot model interpretation (observed vs predicted accessibility)
@@ -105,8 +105,8 @@ for(i in names(enhancers)){
   
 }
 
-# plot observed and predicted profiles
-ggpubr::ggarrange(plotlist = p_obs, common.legend = T, ncol = 5)
+# plot observed and predicted profiles, Figure 6b
+ggpubr::ggarrange(plotlist = p_obs, common.legend = T, ncol = 5) 
 ggpubr::ggarrange(plotlist = p_pred, common.legend = T, ncol = 5)
 
 
