@@ -131,6 +131,7 @@ for(i in celltypes_injury){
 }
 
 # plot enriched motifs for each cell type and injury condition
+# Figure 5c, S8
 for(i in c("Astrocytes", "Ependymal", "Microglia", "OPCs", "Oligodendrocytes")){
   cell_injury <- paste0(i, "_I")
   cell_uninjured <- paste0(i, "_U")
