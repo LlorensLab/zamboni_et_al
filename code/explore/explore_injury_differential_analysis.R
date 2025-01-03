@@ -6,7 +6,7 @@
 
 #clustering of DEGs and DARs
 # injury-induced genes and peaks are clustered using TCseq into modules with the same dynamics
-
+# Figure 3
 source("../source.R")
 multiome <- readRDS("merged_multiome.rds")
 
@@ -185,6 +185,7 @@ for(j in names(modules_peaks)){
 ## shared glial injury programs
 # upset plot to extract injury-enriched genes shared among glia cells
 ######
+# Figure 4, Figure S7
 list_markers <- list()
 for(i in c("Astrocytes", "Ependymal", "Microglia", "Oligodendrocytes", "OPCs")){
   markers <- markers_Uvsothers_rna_all[[i]] %>%
@@ -217,7 +218,7 @@ avg_rna_clusters <- AverageExpression(glia, assays = "RNA", group.by = "cluster_
 
 DoHeatmap(avg_rna_clusters, pan_glia_injury$gene, draw.lines = F) +
   scale_fill_viridis(option = "inferno") +
-  NoLegend()
+  NoLegend() 
 
 #get peaks linked to genes shared among glia cells
 linkedpeaks_df <- do.call("rbind", linkedpeaks)
@@ -246,6 +247,7 @@ DoHeatmap(avg_rna_clusters, pairwise_glia_injury$gene, draw.lines = F) +
 
 
 ## explore dynamic expression of AP1 transcription factors
+# Figure 4, S8
 genes <- "Fos|Jun|Atf|Jdp|Batf|Maf"
 all_ap1 <- rownames(multiome@assays$RNA)[grep(genes, rownames(multiome@assays$RNA))]
 
