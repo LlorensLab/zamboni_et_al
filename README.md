@@ -9,14 +9,16 @@ Code for the analysis of 'Decoding injury responsive enhancers in the CNS for ce
    5. filtering.R
    6. merge_sample_objects.R
       
-2. Machine learning (prepare input data based on differentially accessible regions, train the cell type specific models and intepret their predictions) - Figure 2, 5, Figure S4, S5, S8, S9
+2. Machine learning (prepare input data based on differentially accessible regions, train the cell type specific models and intepret their predictions) - Figure 2, 5, Figure S4, S5, S10, S11
    1. prepare_ml_input.R
    2. run_chrombpnet.sh
    3. peak_interpretation.ipynb
   
-3. Explore (explorative analysis, such as differential expression and accessibility across cell types and injury timepoints, motif analysis, and processing and analysis of the enhancer aav reporter assay) - Figure 3, 4, 6, Figure S2, S3, S6, S7
+3. Explore (explorative analysis, such as differential expression and accessibility across cell types and injury timepoints, motif analysis, and processing and analysis of the enhancer aav reporter assay) - Figure 3, 4, 5, Figure S2, S3, S6, S7, S8, S9, S11, S12
    1. differential_analysis.R
    2. ml_interpretation.R
    3. explore_injury_differential_analysis.R
    4. ml_injury_interpretation.R
-   5. enhancer_aav_reporter_assay.R
+   5. explore_scenicplus.R
+   6. enhancer_aav_reporter_assay.R
+
