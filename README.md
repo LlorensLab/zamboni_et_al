@@ -1,14 +1,17 @@
 # zamboni_et_al
 Code for the analysis of 'Decoding injury responsive enhancers in the CNS for cell state targeting'
 
-1. Pre-processing (getting data from raw sequencing files to Seurat objects, integrated and cleared of low quality cells and doublets) - Figure 1, Figure S1
+1. Pre-processing (getting data from raw sequencing files to Seurat objects, integrated and cleared of low quality cells and doublets, SCENICplus preprocessing, and CUTandTag) - Figure 1, Figure S1, Figure S11
    1. mgi_demultiplex.sh
    2. cellbender.sh
    3. archr_peak_calling.R
    4. create_object.R
    5. filtering.R
    6. merge_sample_objects.R
-   7. cutandtag_preprocess.R
+   7. config.yaml
+   8. pycistopic_multiome.ipynb
+   9. multiome_scenicplus.ipynb
+   10. cutandtag_preprocess.R
       
 2. Machine learning (prepare input data based on differentially accessible regions, train the cell type specific models and intepret their predictions) - Figure 2, 5, Figure S4, S5, S10, S11
    1. prepare_ml_input.R
