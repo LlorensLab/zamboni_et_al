@@ -8,6 +8,7 @@ Code for the analysis of 'Decoding injury responsive enhancers in the CNS for ce
    4. create_object.R
    5. filtering.R
    6. merge_sample_objects.R
+   7. cutandtag_preprocess.R
       
 2. Machine learning (prepare input data based on differentially accessible regions, train the cell type specific models and intepret their predictions) - Figure 2, 5, Figure S4, S5, S10, S11
    1. prepare_ml_input.R
